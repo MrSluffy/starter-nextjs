@@ -95,7 +95,9 @@ function createConfigFromTemplate(
   templateId: TemplateId,
   baseConfig: GeneratorConfig,
 ): GeneratorConfig {
-  const { preset } = getTemplateById(templateId);
+  const template = getTemplateById(templateId);
+  const preset = template.preset;
+  const presetExtras = "extras" in preset ? preset.extras : undefined;
 
   return {
     ...defaultConfig,
@@ -106,7 +108,7 @@ function createConfigFromTemplate(
     ...preset,
     extras: {
       ...defaultConfig.extras,
-      ...(preset.extras ?? {}),
+      ...(presetExtras ?? {}),
     },
   };
 }
@@ -319,7 +321,7 @@ export function getFolderTree(cfg: GeneratorConfig): FolderNode {
       ? [{ name: ".github", children: [{ name: "workflows", children: [{ name: "ci.yml" }] }] }]
       : []),
     { name: ".env.example" },
-    { name: "next.config.ts" },
+    { name: `next.config.${ext}` },
     { name: "package.json" },
     ...(isTS ? [{ name: "tsconfig.json" }] : []),
     ...(cfg.extras.eslintPrettier ? [{ name: ".eslintrc.json" }, { name: ".prettierrc" }] : []),
@@ -333,11 +335,13 @@ export function getCliCommand(cfg: GeneratorConfig): string {
   const pm = cfg.packageManager;
   const create = getCreateNextAppBaseCommand(pm);
   const version = cfg.nextVersion.split(".")[0] + ".x";
+  const versionTag = version === "16.x" ? "latest" : version;
+  const versionedCreate = pm === "npm" ? `${create}${versionTag}` : `${create}@${versionTag}`;
   const { isTypeScript } = getLanguageFileExtensions(cfg.language);
   const ts = isTypeScript ? " --typescript" : " --javascript";
   const tailwind = cfg.styling === "tailwind" ? " --tailwind" : " --no-tailwind";
   const router = cfg.router === "app" ? " --app" : " --no-app";
-  return `${create}${version === "16.x" ? "latest" : version} ${cfg.projectName}${ts}${tailwind}${router} --src-dir --import-alias "@/*"`;
+  return `${versionedCreate} ${cfg.projectName}${ts}${tailwind}${router} --src-dir --import-alias "@/*"`;
 }
 
 export function getGeneratorConfig(state: GeneratorConfig | GeneratorState): GeneratorConfig {

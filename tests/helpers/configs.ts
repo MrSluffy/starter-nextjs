@@ -67,7 +67,9 @@ export const representativeConfigs = {
     extras: {
       docker: true,
       githubActions: true,
+      openApiClient: false,
       eslintPrettier: true,
+      huskyLintStaged: false,
     },
   }),
 };

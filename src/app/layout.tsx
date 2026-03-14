@@ -5,6 +5,18 @@ import "./globals.css";
 
 const geistSans = Geist({ subsets: ["latin"], variable: "--font-sans" });
 const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" });
+const themeInitializer = `(() => {
+  const root = document.documentElement;
+  const media = window.matchMedia("(prefers-color-scheme: dark)");
+
+  const applyTheme = (isDark) => {
+    root.classList.toggle("dark", isDark);
+    root.style.colorScheme = isDark ? "dark" : "light";
+  };
+
+  applyTheme(media.matches);
+  media.addEventListener?.("change", (event) => applyTheme(event.matches));
+})();`;
 
 export const metadata: Metadata = {
   title: "Next.js Starter — Project Generator",
@@ -14,7 +26,14 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`dark ${geistSans.variable} ${geistMono.variable}`}>
+    <html
+      lang="en"
+      className={`${geistSans.variable} ${geistMono.variable}`}
+      suppressHydrationWarning
+    >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitializer }} />
+      </head>
       <body className="font-sans antialiased">
         <TooltipProvider>{children}</TooltipProvider>
       </body>

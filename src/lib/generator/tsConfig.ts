@@ -27,16 +27,21 @@ export function buildTsConfig(): object {
 }
 
 export function buildNextConfig(cfg: GeneratorConfig): string {
+  const nextMajor = Number.parseInt(cfg.nextVersion, 10);
+  const isTS = cfg.language === "typescript";
   const lines: string[] = [];
-  lines.push(`import type { NextConfig } from "next";`);
-  lines.push("");
-  lines.push("const nextConfig: NextConfig = {");
-  if (cfg.extras.eslintPrettier) lines.push("  eslint: { ignoreDuringBuilds: false },");
+  if (isTS) {
+    lines.push(`import type { NextConfig } from "next";`);
+    lines.push("");
+    lines.push("const nextConfig: NextConfig = {");
+  } else {
+    lines.push('/** @type {import("next").NextConfig} */');
+    lines.push("const nextConfig = {");
+  }
   if (cfg.language === "typescript") lines.push("  typescript: { ignoreBuildErrors: false },");
-  lines.push("  experimental: {");
-  lines.push("    // Enable React Compiler for automatic memoization");
-  lines.push("    reactCompiler: false,");
-  lines.push("  },");
+  if (!Number.isNaN(nextMajor) && nextMajor >= 15) {
+    lines.push("  reactCompiler: false,");
+  }
   lines.push("};");
   lines.push("");
   lines.push("export default nextConfig;");

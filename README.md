@@ -1,4 +1,9 @@
+![Screenshot](./docs/preview/screenshot.png)
+
 # Next.js Project Generator
+
+[![Deployment](https://img.shields.io/badge/deployment-live-black?logo=vercel)](https://starter-nextjs-v.vercel.app)
+[![Tests Passed](https://github.com/MrSluffy/starter-nextjs/actions/workflows/branch-pipeline.yml/badge.svg?branch=development)](https://github.com/MrSluffy/starter-nextjs/actions/workflows/branch-pipeline.yml)
 
 A web application that functions similarly to Spring Initializr, but specifically for generating production-ready Next.js projects. It provides a seamless experience for developers to configure, preview, and download a fully scaffolded Next.js project that adheres to modern best practices and scalable architecture.
 
@@ -42,6 +47,10 @@ pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the application in action.
+
+## Deployment
+
+The latest hosted version is available at [starter-nextjs.vercel.app](https://starter-nextjs-v.vercel.app).
 
 ## Available Scripts
 

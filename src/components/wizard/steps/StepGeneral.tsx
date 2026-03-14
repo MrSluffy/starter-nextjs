@@ -1,10 +1,10 @@
 "use client";
 
 import { useGeneratorStore, NEXT_VERSIONS } from "@/store/generatorStore";
+import { getTemplateById } from "@/lib/templates";
 import { StepShell, OptionCard } from "./StepShell";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
 
 const PKG_MANAGERS = [
   { value: "npm", label: "npm", desc: "Node Package Manager (default)" },
@@ -19,6 +19,7 @@ const LANGUAGES = [
 
 export function StepGeneral() {
   const store = useGeneratorStore();
+  const selectedTemplate = getTemplateById(store.templateId);
 
   return (
     <StepShell
@@ -26,6 +27,17 @@ export function StepGeneral() {
       description="Configure the basic details of your new Next.js project."
     >
       <div className="space-y-6">
+        {store.templateId !== "custom" && (
+          <div className="rounded-xl border border-sky-500/10 bg-sky-500/5 p-4">
+            <p className="text-xs font-semibold text-sky-400">
+              Starting from {selectedTemplate.label}
+            </p>
+            <p className="text-muted-foreground mt-1 text-xs">
+              This preset already applied a recommended stack. You can override anything below.
+            </p>
+          </div>
+        )}
+
         {/* Project name */}
         <div className="space-y-2">
           <Label className="text-foreground/90 text-sm font-semibold">Project Name</Label>

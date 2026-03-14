@@ -2,19 +2,21 @@
 
 import { useGeneratorStore } from "@/store/generatorStore";
 import { WizardSidebar } from "@/components/wizard/WizardSidebar";
-import { StepGeneral } from "@/components/wizard/StepGeneral";
-import { StepArchitecture } from "@/components/wizard/StepArchitecture";
-import { StepStyling } from "@/components/wizard/StepStyling";
-import { StepStateManagement } from "@/components/wizard/StepStateManagement";
-import { StepApiLayer } from "@/components/wizard/StepApiLayer";
-import { StepAuth } from "@/components/wizard/StepAuth";
-import { StepDatabase } from "@/components/wizard/StepDatabase";
-import { StepTesting } from "@/components/wizard/StepTesting";
-import { StepExtras } from "@/components/wizard/StepExtras";
-import { StepSummary } from "@/components/wizard/StepSummary";
+import { StepTemplate } from "@/components/wizard/steps/StepTemplate";
+import { StepGeneral } from "@/components/wizard/steps/StepGeneral";
+import { StepArchitecture } from "@/components/wizard/steps/StepArchitecture";
+import { StepStyling } from "@/components/wizard/steps/StepStyling";
+import { StepStateManagement } from "@/components/wizard/steps/StepStateManagement";
+import { StepApiLayer } from "@/components/wizard/steps/StepApiLayer";
+import { StepAuth } from "@/components/wizard/steps/StepAuth";
+import { StepDatabase } from "@/components/wizard/steps/StepDatabase";
+import { StepTesting } from "@/components/wizard/steps/StepTesting";
+import { StepExtras } from "@/components/wizard/steps/StepExtras";
+import { StepSummary } from "@/components/wizard/steps/StepSummary";
 import { PreviewPanel } from "@/components/preview/PreviewPanel";
 
 const STEPS = [
+  StepTemplate,
   StepGeneral,
   StepArchitecture,
   StepStyling,

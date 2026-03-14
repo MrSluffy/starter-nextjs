@@ -55,8 +55,7 @@ export function buildEnvExample(cfg: GeneratorConfig): string {
 export function buildAppLayout(cfg: GeneratorConfig): string {
   const { isTypeScript } = getLanguageFileExtensions(cfg.language);
   const tailwind = cfg.styling === "tailwind";
-  return `import type { Metadata } from "next"${isTypeScript ? "" : ""};
-import { Inter } from "next/font/google";
+  return `${isTypeScript ? 'import type { Metadata } from "next";\n' : ""}import { Inter } from "next/font/google";
 ${tailwind ? `import "./globals.css";` : ""}
 
 const inter = Inter({ subsets: ["latin"] });
@@ -99,7 +98,7 @@ export function buildMiddleware(cfg: GeneratorConfig): string {
   const ext = isTypeScript ? "ts" : "js";
   void ext;
   return `import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+${isTypeScript ? 'import type { NextRequest } from "next/server";\n' : ""}
 
 export function middleware(request${isTypeScript ? ": NextRequest" : ""}) {
   // Add custom middleware logic here
@@ -127,7 +126,7 @@ export function buildApiLib(cfg: GeneratorConfig): string {
 
 export async function apiFetch${ts ? "<T = unknown>" : ""}(
   path${ts ? ": string" : ""},
-  options${ts ? "?: FetchOptions" : ""} = {}
+  options${ts ? ": FetchOptions" : ""} = {}
 )${ts ? ": Promise<T>" : ""} {
   const { params, ...init } = options${ts ? " as FetchOptions" : ""} ?? {};
   const url = new URL(path, BASE_URL);
@@ -177,7 +176,7 @@ export function buildLoggerLib(cfg: GeneratorConfig): string {
   return `${ts ? 'type LogLevel = "debug" | "info" | "warn" | "error";\n\n' : ""}const isDev = process.env.NODE_ENV === "development";
 
 function createLogger() {
-  function log(level${ts ? ": LogLevel" : ""}, message${ts ? ": string" : ""}, meta${ts ? "?: Record<string, unknown>" : ""} = {}) {
+  function log(level${ts ? ": LogLevel" : ""}, message${ts ? ": string" : ""}, meta${ts ? ": Record<string, unknown>" : ""} = {}) {
     if (level === "debug" && !isDev) return;
     const entry = { level, message, timestamp: new Date().toISOString(), ...meta };
     if (level === "error") {
@@ -393,6 +392,6 @@ src/
 | \`${buildCommand}\` | Build for production |
 | \`${startCommand}\` | Start production server |
 | \`${lintCommand}\` | Run ESLint |
-${cfg.testing !== "none" ? `| \`${testCommand}\` | Run tests |\n` : ""}\`\`\`
+${cfg.testing !== "none" ? `| \`${testCommand}\` | Run tests |\n` : ""}
 `;
 }

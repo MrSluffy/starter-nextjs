@@ -1,11 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { useGeneratorStore, getDependencies, getCliCommand } from "@/store/generatorStore";
+import {
+  useGeneratorStore,
+  getDependencies,
+  getCliCommand,
+  getGeneratorConfig,
+} from "@/store/generatorStore";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DownloadIcon, RotateCcwIcon, CopyIcon, CheckIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getTemplateById } from "@/lib/templates";
 
 const LABEL_MAP: Record<string, string> = {
   projectName: "Project",
@@ -35,9 +41,11 @@ export function StepSummary() {
   const [downloading, setDownloading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const config = getGeneratorConfig(store);
+  const selectedTemplate = getTemplateById(store.templateId);
 
-  const cliCmd = getCliCommand(store);
-  const depGroups = getDependencies(store);
+  const cliCmd = getCliCommand(config);
+  const depGroups = getDependencies(config);
 
   const enabledExtras = Object.entries(store.extras)
     .filter(([, v]) => v)
@@ -50,21 +58,7 @@ export function StepSummary() {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          projectName: store.projectName,
-          packageManager: store.packageManager,
-          language: store.language,
-          nextVersion: store.nextVersion,
-          router: store.router,
-          styling: store.styling,
-          stateManagement: store.stateManagement,
-          apiLayer: store.apiLayer,
-          auth: store.auth,
-          database: store.database,
-          orm: store.orm,
-          testing: store.testing,
-          extras: store.extras,
-        }),
+        body: JSON.stringify(config),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -80,7 +74,7 @@ export function StepSummary() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    } catch (err) {
+    } catch {
       setError("Network error. Please try again.");
     } finally {
       setDownloading(false);
@@ -113,6 +107,12 @@ export function StepSummary() {
           <p className="text-muted-foreground mb-3 text-xs font-semibold tracking-wider uppercase">
             Configuration
           </p>
+          <div className="mb-4 flex items-center justify-between gap-2 rounded-lg border border-white/5 bg-black/10 px-3 py-2">
+            <span className="text-muted-foreground text-xs">Template</span>
+            <Badge variant="secondary" className="bg-muted text-foreground/80 border-none text-xs">
+              {selectedTemplate.label}
+            </Badge>
+          </div>
           <div className="grid grid-cols-2 gap-x-4 gap-y-2">
             {summaryFields.map(({ label, value }) => (
               <div key={label} className="flex items-center justify-between gap-2">

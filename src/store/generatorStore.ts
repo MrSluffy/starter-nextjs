@@ -1,5 +1,7 @@
 import { create } from "zustand";
 import { getCreateNextAppBaseCommand, getLanguageFileExtensions } from "@/lib/generator/shared";
+import { DEFAULT_TEMPLATE_ID, getTemplateById } from "@/lib/templates";
+import type { TemplateId } from "@/lib/templates";
 
 export type PackageManager = "npm" | "yarn" | "pnpm";
 export type Language = "typescript" | "javascript";
@@ -45,8 +47,10 @@ export interface GeneratorConfig {
 }
 
 export interface GeneratorState extends GeneratorConfig {
+  templateId: TemplateId;
   step: number;
   totalSteps: number;
+  setTemplate: (templateId: TemplateId) => void;
   setStep: (step: number) => void;
   nextStep: () => void;
   prevStep: () => void;
@@ -87,16 +91,44 @@ const defaultConfig: GeneratorConfig = {
   },
 };
 
+function createConfigFromTemplate(
+  templateId: TemplateId,
+  baseConfig: GeneratorConfig,
+): GeneratorConfig {
+  const template = getTemplateById(templateId);
+  const preset = template.preset;
+  const presetExtras = "extras" in preset ? preset.extras : undefined;
+
+  return {
+    ...defaultConfig,
+    projectName: baseConfig.projectName,
+    packageManager: baseConfig.packageManager,
+    language: baseConfig.language,
+    nextVersion: baseConfig.nextVersion,
+    ...preset,
+    extras: {
+      ...defaultConfig.extras,
+      ...(presetExtras ?? {}),
+    },
+  };
+}
+
 export const useGeneratorStore = create<GeneratorState>((set) => ({
   ...defaultConfig,
+  templateId: DEFAULT_TEMPLATE_ID,
   step: 0,
-  totalSteps: 10,
+  totalSteps: 11,
+  setTemplate: (templateId) =>
+    set((state) => ({
+      templateId,
+      ...createConfigFromTemplate(templateId, state),
+    })),
   setStep: (step) => set({ step }),
   nextStep: () => set((s) => ({ step: Math.min(s.step + 1, s.totalSteps - 1) })),
   prevStep: () => set((s) => ({ step: Math.max(s.step - 1, 0) })),
   set: (key, value) => set({ [key]: value } as Partial<GeneratorState>),
   setExtra: (key, value) => set((s) => ({ extras: { ...s.extras, [key]: value } })),
-  reset: () => set({ ...defaultConfig, step: 0 }),
+  reset: () => set({ ...defaultConfig, templateId: DEFAULT_TEMPLATE_ID, step: 0 }),
 }));
 
 // ── Derived helpers ────────────────────────────────────────────────────────────
@@ -289,7 +321,7 @@ export function getFolderTree(cfg: GeneratorConfig): FolderNode {
       ? [{ name: ".github", children: [{ name: "workflows", children: [{ name: "ci.yml" }] }] }]
       : []),
     { name: ".env.example" },
-    { name: "next.config.ts" },
+    { name: `next.config.${ext}` },
     { name: "package.json" },
     ...(isTS ? [{ name: "tsconfig.json" }] : []),
     ...(cfg.extras.eslintPrettier ? [{ name: ".eslintrc.json" }, { name: ".prettierrc" }] : []),
@@ -303,9 +335,29 @@ export function getCliCommand(cfg: GeneratorConfig): string {
   const pm = cfg.packageManager;
   const create = getCreateNextAppBaseCommand(pm);
   const version = cfg.nextVersion.split(".")[0] + ".x";
+  const versionTag = version === "16.x" ? "latest" : version;
+  const versionedCreate = pm === "npm" ? `${create}${versionTag}` : `${create}@${versionTag}`;
   const { isTypeScript } = getLanguageFileExtensions(cfg.language);
   const ts = isTypeScript ? " --typescript" : " --javascript";
   const tailwind = cfg.styling === "tailwind" ? " --tailwind" : " --no-tailwind";
   const router = cfg.router === "app" ? " --app" : " --no-app";
-  return `${create}${version === "16.x" ? "latest" : version} ${cfg.projectName}${ts}${tailwind}${router} --src-dir --import-alias "@/*"`;
+  return `${versionedCreate} ${cfg.projectName}${ts}${tailwind}${router} --src-dir --import-alias "@/*"`;
+}
+
+export function getGeneratorConfig(state: GeneratorConfig | GeneratorState): GeneratorConfig {
+  return {
+    projectName: state.projectName,
+    packageManager: state.packageManager,
+    language: state.language,
+    nextVersion: state.nextVersion,
+    router: state.router,
+    styling: state.styling,
+    stateManagement: state.stateManagement,
+    apiLayer: state.apiLayer,
+    auth: state.auth,
+    database: state.database,
+    orm: state.orm,
+    testing: state.testing,
+    extras: state.extras,
+  };
 }

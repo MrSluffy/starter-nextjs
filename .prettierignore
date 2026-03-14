@@ -9,3 +9,4 @@ next-env.d.ts
 pnpm-lock.yaml
 yarn.lock
 package-lock.json
+LICENSE

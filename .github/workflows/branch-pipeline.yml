@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   verify:
-    name: Verify ${{ github.ref_name == 'main' && 'production' || 'development' }}
+    name: Verify
     runs-on: ubuntu-latest
     environment:
       name: ${{ github.ref_name == 'main' && 'production' || 'development' }}
@@ -43,6 +43,9 @@ jobs:
       - name: Validate generated projects
         run: npm run test:generated
 
+      - name: Install Playwright browsers for smoke checks
+        run: npx playwright install --with-deps chromium
+
       - name: Run generated project smoke checks
         run: npm run test:generated:smoke
 
@@ -50,7 +53,7 @@ jobs:
         run: npm run build
 
   e2e:
-    name: Browser Tests (${{ github.ref_name == 'main' && 'production' || 'development' }})
+    name: Browser Tests
     runs-on: ubuntu-latest
     needs: verify
     environment:

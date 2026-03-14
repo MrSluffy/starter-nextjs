@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { CheckIcon } from "lucide-react";
 
 const STEP_LABELS = [
+  "Template",
   "General",
   "Architecture",
   "Styling",

@@ -1,5 +1,7 @@
 import { create } from "zustand";
 import { getCreateNextAppBaseCommand, getLanguageFileExtensions } from "@/lib/generator/shared";
+import { DEFAULT_TEMPLATE_ID, getTemplateById } from "@/lib/templates";
+import type { TemplateId } from "@/lib/templates";
 
 export type PackageManager = "npm" | "yarn" | "pnpm";
 export type Language = "typescript" | "javascript";
@@ -45,8 +47,10 @@ export interface GeneratorConfig {
 }
 
 export interface GeneratorState extends GeneratorConfig {
+  templateId: TemplateId;
   step: number;
   totalSteps: number;
+  setTemplate: (templateId: TemplateId) => void;
   setStep: (step: number) => void;
   nextStep: () => void;
   prevStep: () => void;
@@ -87,16 +91,42 @@ const defaultConfig: GeneratorConfig = {
   },
 };
 
+function createConfigFromTemplate(
+  templateId: TemplateId,
+  baseConfig: GeneratorConfig,
+): GeneratorConfig {
+  const { preset } = getTemplateById(templateId);
+
+  return {
+    ...defaultConfig,
+    projectName: baseConfig.projectName,
+    packageManager: baseConfig.packageManager,
+    language: baseConfig.language,
+    nextVersion: baseConfig.nextVersion,
+    ...preset,
+    extras: {
+      ...defaultConfig.extras,
+      ...(preset.extras ?? {}),
+    },
+  };
+}
+
 export const useGeneratorStore = create<GeneratorState>((set) => ({
   ...defaultConfig,
+  templateId: DEFAULT_TEMPLATE_ID,
   step: 0,
-  totalSteps: 10,
+  totalSteps: 11,
+  setTemplate: (templateId) =>
+    set((state) => ({
+      templateId,
+      ...createConfigFromTemplate(templateId, state),
+    })),
   setStep: (step) => set({ step }),
   nextStep: () => set((s) => ({ step: Math.min(s.step + 1, s.totalSteps - 1) })),
   prevStep: () => set((s) => ({ step: Math.max(s.step - 1, 0) })),
   set: (key, value) => set({ [key]: value } as Partial<GeneratorState>),
   setExtra: (key, value) => set((s) => ({ extras: { ...s.extras, [key]: value } })),
-  reset: () => set({ ...defaultConfig, step: 0 }),
+  reset: () => set({ ...defaultConfig, templateId: DEFAULT_TEMPLATE_ID, step: 0 }),
 }));
 
 // ── Derived helpers ────────────────────────────────────────────────────────────
@@ -308,4 +338,22 @@ export function getCliCommand(cfg: GeneratorConfig): string {
   const tailwind = cfg.styling === "tailwind" ? " --tailwind" : " --no-tailwind";
   const router = cfg.router === "app" ? " --app" : " --no-app";
   return `${create}${version === "16.x" ? "latest" : version} ${cfg.projectName}${ts}${tailwind}${router} --src-dir --import-alias "@/*"`;
+}
+
+export function getGeneratorConfig(state: GeneratorConfig | GeneratorState): GeneratorConfig {
+  return {
+    projectName: state.projectName,
+    packageManager: state.packageManager,
+    language: state.language,
+    nextVersion: state.nextVersion,
+    router: state.router,
+    styling: state.styling,
+    stateManagement: state.stateManagement,
+    apiLayer: state.apiLayer,
+    auth: state.auth,
+    database: state.database,
+    orm: state.orm,
+    testing: state.testing,
+    extras: state.extras,
+  };
 }

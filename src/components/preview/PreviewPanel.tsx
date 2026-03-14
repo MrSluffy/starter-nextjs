@@ -2,6 +2,7 @@
 
 import {
   useGeneratorStore,
+  getGeneratorConfig,
   getDependencies,
   getFolderTree,
   getCliCommand,
@@ -13,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CopyIcon, CheckIcon } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { getTemplateById } from "@/lib/templates";
 
 function FolderTreeNode({ node, depth = 0 }: { node: FolderNode; depth?: number }) {
   const isDir = !!node.children;
@@ -41,10 +43,12 @@ function FolderTreeNode({ node, depth = 0 }: { node: FolderNode; depth?: number 
 export function PreviewPanel() {
   const store = useGeneratorStore();
   const [copied, setCopied] = useState(false);
+  const config = getGeneratorConfig(store);
+  const selectedTemplate = getTemplateById(store.templateId);
 
-  const depGroups = getDependencies(store);
-  const tree = getFolderTree(store);
-  const cli = getCliCommand(store);
+  const depGroups = getDependencies(config);
+  const tree = getFolderTree(config);
+  const cli = getCliCommand(config);
 
   function handleCopy() {
     navigator.clipboard.writeText(cli);
@@ -142,6 +146,10 @@ export function PreviewPanel() {
                 Project Info
               </p>
               <div className="space-y-1.5 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Template</span>
+                  <span className="text-foreground font-mono">{selectedTemplate.label}</span>
+                </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Name</span>
                   <span className="text-foreground font-mono">{store.projectName}</span>

@@ -1,3 +1,5 @@
+![Screenshot](./docs/preview/screenshot.png)
+
 # Next.js Project Generator
 
 A web application that functions similarly to Spring Initializr, but specifically for generating production-ready Next.js projects. It provides a seamless experience for developers to configure, preview, and download a fully scaffolded Next.js project that adheres to modern best practices and scalable architecture.

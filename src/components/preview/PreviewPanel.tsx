@@ -8,6 +8,7 @@ import {
   getCliCommand,
 } from "@/store/generatorStore";
 import type { FolderNode } from "@/store/generatorStore";
+import { useResolvedVersions } from "@/hooks/useResolvedVersions";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -44,9 +45,10 @@ export function PreviewPanel() {
   const store = useGeneratorStore();
   const [copied, setCopied] = useState(false);
   const config = getGeneratorConfig(store);
+  const { versions } = useResolvedVersions(config);
   const selectedTemplate = getTemplateById(store.templateId);
 
-  const depGroups = getDependencies(config);
+  const depGroups = getDependencies(config, versions);
   const tree = getFolderTree(config);
   const cli = getCliCommand(config);
 
@@ -156,7 +158,9 @@ export function PreviewPanel() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Next.js</span>
-                  <span className="text-foreground font-mono">{store.nextVersion}</span>
+                  <span className="text-foreground font-mono">
+                    {versions?.next ? `${store.nextVersion} (${versions.next})` : store.nextVersion}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Language</span>

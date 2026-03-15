@@ -14,6 +14,9 @@ concurrency:
   group: branch-pipeline-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   verify:
     name: Verify ${{ github.ref_name == 'main' && 'production' || 'development' }}
@@ -23,10 +26,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
           node-version: 22
           cache: npm
@@ -52,6 +55,18 @@ jobs:
       - name: Build application
         run: npm run build
 
+      - name: Add job summary
+        if: always()
+        run: |
+          echo "## Verify summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Vitest Test Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Unit and component tests:** see step \"Run unit and component tests\" above" >> $GITHUB_STEP_SUMMARY
+          echo "- **Generated project validation:** see step \"Validate generated projects\" above" >> $GITHUB_STEP_SUMMARY
+          echo "- **Smoke checks:** see step \"Run generated project smoke checks\" above" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build:** completed" >> $GITHUB_STEP_SUMMARY
+
   e2e:
     name: Browser Tests ${{ github.ref_name == 'main' && 'production' || 'development' }}
     runs-on: ubuntu-latest
@@ -61,10 +76,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
           node-version: 22
           cache: npm
@@ -80,7 +95,7 @@ jobs:
 
       - name: Upload Playwright report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
         with:
           name: playwright-report-${{ github.ref_name }}
           path: playwright-report

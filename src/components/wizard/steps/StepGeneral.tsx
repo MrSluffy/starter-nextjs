@@ -1,7 +1,8 @@
 "use client";
 
-import { useGeneratorStore, NEXT_VERSIONS } from "@/store/generatorStore";
+import { useGeneratorStore, NEXT_VERSIONS, getGeneratorConfig } from "@/store/generatorStore";
 import { getTemplateById } from "@/lib/templates";
+import { useResolvedVersions } from "@/hooks/useResolvedVersions";
 import { StepShell, OptionCard } from "./StepShell";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +20,8 @@ const LANGUAGES = [
 
 export function StepGeneral() {
   const store = useGeneratorStore();
+  const config = getGeneratorConfig(store);
+  const { versions, isLoading: versionsLoading } = useResolvedVersions(config);
   const selectedTemplate = getTemplateById(store.templateId);
 
   return (
@@ -101,6 +104,21 @@ export function StepGeneral() {
               />
             ))}
           </div>
+          {versions?.next && (
+            <p className="text-muted-foreground text-xs">
+              Installing: Next.js{" "}
+              <span className="text-foreground/90 font-mono">{versions.next}</span>
+              {versions.react && (
+                <>
+                  {" "}
+                  · React <span className="text-foreground/90 font-mono">{versions.react}</span>
+                </>
+              )}
+            </p>
+          )}
+          {versionsLoading && !versions?.next && (
+            <p className="text-muted-foreground text-xs">Resolving latest versions…</p>
+          )}
         </div>
       </div>
     </StepShell>

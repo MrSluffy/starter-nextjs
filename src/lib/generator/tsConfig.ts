@@ -27,8 +27,8 @@ export function buildTsConfig(): object {
 }
 
 export function buildNextConfig(cfg: GeneratorConfig): string {
-  const nextMajor = Number.parseInt(cfg.nextVersion, 10);
   const isTS = cfg.language === "typescript";
+  const nextMajor = Number.parseInt(cfg.nextVersion, 10);
   const lines: string[] = [];
   if (isTS) {
     lines.push(`import type { NextConfig } from "next";`);
@@ -38,10 +38,11 @@ export function buildNextConfig(cfg: GeneratorConfig): string {
     lines.push('/** @type {import("next").NextConfig} */');
     lines.push("const nextConfig = {");
   }
-  if (cfg.language === "typescript") lines.push("  typescript: { ignoreBuildErrors: false },");
-  if (!Number.isNaN(nextMajor) && nextMajor >= 15) {
-    lines.push("  reactCompiler: false,");
-  }
+  const configEntries: string[] = [];
+  if (cfg.language === "typescript")
+    configEntries.push("  typescript: { ignoreBuildErrors: false }");
+  if (!Number.isNaN(nextMajor) && nextMajor >= 15) configEntries.push("  reactCompiler: false");
+  lines.push(configEntries.join(",\n") + (configEntries.length ? "\n" : ""));
   lines.push("};");
   lines.push("");
   lines.push("export default nextConfig;");

@@ -7,6 +7,7 @@ import {
   getCliCommand,
   getGeneratorConfig,
 } from "@/store/generatorStore";
+import { useResolvedVersions } from "@/hooks/useResolvedVersions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DownloadIcon, RotateCcwIcon, CopyIcon, CheckIcon } from "lucide-react";
@@ -42,10 +43,11 @@ export function StepSummary() {
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const config = getGeneratorConfig(store);
+  const { versions } = useResolvedVersions(config);
   const selectedTemplate = getTemplateById(store.templateId);
 
   const cliCmd = getCliCommand(config);
-  const depGroups = getDependencies(config);
+  const depGroups = getDependencies(config, versions);
 
   const enabledExtras = Object.entries(store.extras)
     .filter(([, v]) => v)
@@ -87,10 +89,13 @@ export function StepSummary() {
     setTimeout(() => setCopied(false), 2000);
   }
 
-  const summaryFields = Object.entries(LABEL_MAP).map(([key, label]) => ({
-    label,
-    value: String(store[key as keyof typeof store]),
-  }));
+  const summaryFields = Object.entries(LABEL_MAP).map(([key, label]) => {
+    let value = String(store[key as keyof typeof store]);
+    if (key === "nextVersion" && versions?.next) {
+      value = `${value} (${versions.next})`;
+    }
+    return { label, value };
+  });
 
   return (
     <div className="flex h-full flex-col gap-6">
@@ -180,8 +185,9 @@ export function StepSummary() {
                   key={dep}
                   variant="secondary"
                   className="border-border bg-muted/50 text-foreground/70 font-mono text-[11px] font-normal"
+                  title={dep}
                 >
-                  {dep.startsWith("@") ? `@${dep.slice(1).split("@")[0]}` : dep.split("@")[0]}
+                  {dep}
                 </Badge>
               ))}
           </div>

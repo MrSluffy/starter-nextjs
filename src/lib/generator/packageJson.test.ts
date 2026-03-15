@@ -89,4 +89,23 @@ describe("buildPackageJson", () => {
       ],
     ).toBe("cypress run");
   });
+
+  it("uses resolved versions when provided (npm API fallback)", () => {
+    const resolved = {
+      next: "15.0.3",
+      react: "19.0.0",
+      "react-dom": "19.0.0",
+      typescript: "5.6.3",
+      "next-auth": "5.0.0-beta.25",
+    };
+    const pkg = buildPackageJson(
+      createConfig({ nextVersion: "15.x", auth: "nextauth" }),
+      resolved,
+    ) as GeneratedPackageJson;
+    expect(pkg.dependencies.next).toBe("^15.0.3");
+    expect(pkg.dependencies.react).toBe("^19.0.0");
+    expect(pkg.dependencies["react-dom"]).toBe("^19.0.0");
+    expect(pkg.dependencies["next-auth"]).toBe("^5.0.0-beta.25");
+    expect(pkg.devDependencies.typescript).toBe("^5.6.3");
+  });
 });

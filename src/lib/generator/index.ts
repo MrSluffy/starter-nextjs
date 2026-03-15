@@ -1,7 +1,7 @@
 import archiver from "archiver";
 import { Writable, PassThrough } from "stream";
 import type { GeneratorConfig } from "@/store/generatorStore";
-import { buildPackageJson } from "./packageJson";
+import { buildPackageJson, resolveDependencyVersions } from "./packageJson";
 import { buildTsConfig, buildNextConfig } from "./tsConfig";
 import { buildEslintConfig, buildPrettierConfig } from "./eslintConfig";
 import { buildDockerfile, buildDockerCompose } from "./dockerConfig";
@@ -33,13 +33,16 @@ function j(obj: unknown): string {
   return JSON.stringify(obj, null, 2);
 }
 
-export function collectFiles(cfg: GeneratorConfig): FileEntry[] {
+export function collectFiles(
+  cfg: GeneratorConfig,
+  resolvedVersions?: Record<string, string> | null,
+): FileEntry[] {
   const files: FileEntry[] = [];
   const { isTypeScript: isTS, ext, tsx } = getLanguageFileExtensions(cfg.language);
   const src = "src";
 
   // ── Root config files ────────────────────────────────────────────────────
-  addFile(files, "package.json", j(buildPackageJson(cfg)));
+  addFile(files, "package.json", j(buildPackageJson(cfg, resolvedVersions)));
   if (isTS) addFile(files, "tsconfig.json", j(buildTsConfig()));
   addFile(files, `next.config.${ext}`, buildNextConfig(cfg));
   addFile(files, ".env.example", buildEnvExample(cfg));
@@ -155,7 +158,8 @@ export function collectFiles(cfg: GeneratorConfig): FileEntry[] {
 }
 
 export async function buildZip(cfg: GeneratorConfig): Promise<Buffer> {
-  const files = collectFiles(cfg);
+  const resolvedVersions = await resolveDependencyVersions(cfg);
+  const files = collectFiles(cfg, resolvedVersions);
 
   return new Promise<Buffer>((resolve, reject) => {
     const chunks: Buffer[] = [];

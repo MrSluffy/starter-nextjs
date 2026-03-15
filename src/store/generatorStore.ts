@@ -207,27 +207,69 @@ function pushDependencyGroup(groups: DepGroup[], label: string, deps?: string[])
   groups.push({ label, deps });
 }
 
-export function getDependencies(cfg: GeneratorConfig): DepGroup[] {
+/** Format a single dep for display: "pkg" or "pkg@range" -> "pkg@version" when resolved has it. */
+function formatDepForDisplay(dep: string, resolved?: Record<string, string> | null): string {
+  const pkg = dep.includes("@") ? dep.slice(0, dep.indexOf("@")) : dep;
+  const version = resolved?.[pkg];
+  return version ? `${pkg}@${version}` : dep;
+}
+
+export function getDependencies(
+  cfg: GeneratorConfig,
+  resolvedVersions?: Record<string, string> | null,
+): DepGroup[] {
   const groups: DepGroup[] = [];
+  const fmt = (d: string) => formatDepForDisplay(d, resolvedVersions);
 
-  // Core
+  // Core: show resolved next/react versions when available
   const core = ["react", "react-dom", `next@${getVersionString(cfg.nextVersion)}`];
-  groups.push({ label: "Core", deps: core });
+  groups.push({ label: "Core", deps: core.map(fmt) });
 
-  pushDependencyGroup(groups, "Styling", STYLING_DEPENDENCIES[cfg.styling]);
-  pushDependencyGroup(groups, "State", STATE_DEPENDENCIES[cfg.stateManagement]);
-  pushDependencyGroup(groups, "API", API_DEPENDENCIES[cfg.apiLayer]);
-  pushDependencyGroup(groups, "Auth", AUTH_DEPENDENCIES[cfg.auth]);
-  pushDependencyGroup(groups, "Database", DATABASE_DEPENDENCIES[cfg.database]);
-  pushDependencyGroup(groups, "ORM", ORM_DEPENDENCIES[cfg.orm]);
-  pushDependencyGroup(groups, "Testing (dev)", TESTING_DEPENDENCIES[cfg.testing]);
+  pushDependencyGroup(
+    groups,
+    "Styling",
+    STYLING_DEPENDENCIES[cfg.styling]?.map((d) => fmt(d)),
+  );
+  pushDependencyGroup(
+    groups,
+    "State",
+    STATE_DEPENDENCIES[cfg.stateManagement]?.map((d) => fmt(d)),
+  );
+  pushDependencyGroup(
+    groups,
+    "API",
+    API_DEPENDENCIES[cfg.apiLayer]?.map((d) => fmt(d)),
+  );
+  pushDependencyGroup(
+    groups,
+    "Auth",
+    AUTH_DEPENDENCIES[cfg.auth]?.map((d) => fmt(d)),
+  );
+  pushDependencyGroup(
+    groups,
+    "Database",
+    DATABASE_DEPENDENCIES[cfg.database]?.map((d) => fmt(d)),
+  );
+  pushDependencyGroup(
+    groups,
+    "ORM",
+    ORM_DEPENDENCIES[cfg.orm]?.map((d) => fmt(d)),
+  );
+  pushDependencyGroup(
+    groups,
+    "Testing (dev)",
+    TESTING_DEPENDENCIES[cfg.testing]?.map((d) => fmt(d)),
+  );
 
   for (const [key, group] of Object.entries(EXTRA_DEPENDENCIES) as [
     keyof GeneratorConfig["extras"],
     DepGroup | undefined,
   ][]) {
     if (cfg.extras[key] && group) {
-      groups.push(group);
+      groups.push({
+        label: group.label,
+        deps: group.deps.map((d) => fmt(d)),
+      });
     }
   }
 

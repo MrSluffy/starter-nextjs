@@ -1,0 +1,33 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", ":semanticCommits", "group:monorepos"],
+  "schedule": ["before 10am on monday"],
+  "timezone": "Europe/London",
+  "prConcurrentLimit": 5,
+  "prCreation": "not-pending",
+  "stabilityDays": 3,
+  "rangeStrategy": "bump",
+  "packageRules": [
+    {
+      "description": "Group minor and patch updates for npm dependencies",
+      "matchManagers": ["npm"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "npm non-major dependencies"
+    },
+    {
+      "description": "Group devDependencies minor and patch",
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "devDependencies (non-major)"
+    },
+    {
+      "description": "Pin GitHub Actions to digests",
+      "matchManagers": ["github-actions"],
+      "pinDigests": true
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "enabled": true
+  },
+  "labels": ["dependencies", "renovate"]
+}

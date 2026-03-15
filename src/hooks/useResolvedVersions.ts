@@ -38,8 +38,10 @@ export function useResolvedVersions(config: GeneratorConfig): UseResolvedVersion
   useEffect(() => {
     let cancelled = false;
     const cfg = config;
-    setError(null);
-    setIsLoading(true);
+    queueMicrotask(() => {
+      setError(null);
+      setIsLoading(true);
+    });
 
     fetch("/api/versions", {
       method: "POST",

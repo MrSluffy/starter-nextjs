@@ -4,6 +4,33 @@ import { createConfig } from "../../../../tests/helpers/configs";
 import { unzipTextEntries } from "../../../../tests/helpers/zip";
 import { POST, dynamic, runtime } from "./route";
 
+vi.mock("@/lib/generator/packageJson", async (importOriginal) => {
+  const mod = await importOriginal<typeof import("@/lib/generator/packageJson")>();
+  return {
+    ...mod,
+    resolveDependencyVersions: vi.fn().mockResolvedValue({
+      next: "16.0.0",
+      react: "19.0.0",
+      "react-dom": "19.0.0",
+      typescript: "5.0.0",
+      "@types/node": "22.0.0",
+      "@types/react": "19.0.0",
+      "@types/react-dom": "19.0.0",
+      tailwindcss: "4.0.0",
+      postcss: "8.0.0",
+      autoprefixer: "10.0.0",
+      zustand: "5.0.0",
+      eslint: "9.0.0",
+      prettier: "3.0.0",
+      "eslint-config-prettier": "9.0.0",
+      "eslint-config-next": "16.0.0",
+      jest: "29.0.0",
+      "jest-environment-jsdom": "29.0.0",
+      "@testing-library/react": "16.0.0",
+    }),
+  };
+});
+
 describe("/api/generate", () => {
   it("uses the expected route runtime settings", () => {
     expect(dynamic).toBe("force-dynamic");

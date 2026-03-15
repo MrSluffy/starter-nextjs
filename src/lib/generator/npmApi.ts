@@ -49,7 +49,12 @@ export async function getLatestVersion(packageName: string, range?: string): Pro
   if (!range || range === "latest") {
     version = distTags.latest ?? versionList.sort(semver.rcompare)[0];
   } else {
-    const satisfying = versionList.filter((v) => semver.valid(v) && semver.satisfies(v, range));
+    let satisfying = versionList.filter((v) => semver.valid(v) && semver.satisfies(v, range));
+    if (satisfying.length === 0) {
+      satisfying = versionList.filter(
+        (v) => semver.valid(v) && semver.satisfies(v, range, { includePrerelease: true }),
+      );
+    }
     version = satisfying.sort(semver.rcompare)[0];
   }
 

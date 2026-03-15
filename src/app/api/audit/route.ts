@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
       dependencies: Record<string, string>;
       devDependencies: Record<string, string>;
     };
-    const { vulnerabilities, summary } = runNpmAudit(pkg.dependencies, pkg.devDependencies);
+    const { vulnerabilities, summary } = await runNpmAudit(pkg.dependencies, pkg.devDependencies);
     return NextResponse.json({
       versions,
       vulnerabilities,

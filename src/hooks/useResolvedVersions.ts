@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import type { GeneratorConfig } from "@/store/generatorStore";
 
 export interface UseResolvedVersionsResult {
@@ -9,14 +9,20 @@ export interface UseResolvedVersionsResult {
   error: string | null;
 }
 
+const DEBOUNCE_MS = 500;
+
 /**
  * Fetches resolved latest versions from the npm registry for the given generator config.
- * Used to display actual version numbers (e.g. Next.js 16.1.6) in the UI.
+ * Debounced and only re-runs when the serialized config (configKey) actually changes —
+ * not on every render, since config is a new object reference each time.
  */
 export function useResolvedVersions(config: GeneratorConfig): UseResolvedVersionsResult {
   const [versions, setVersions] = useState<Record<string, string> | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const configRef = useRef(config);
+  configRef.current = config;
 
   const configKey = useMemo(
     () =>
@@ -32,16 +38,31 @@ export function useResolvedVersions(config: GeneratorConfig): UseResolvedVersion
         testing: config.testing,
         extras: config.extras,
       }),
-    [config],
+    [
+      config.nextVersion,
+      config.language,
+      config.styling,
+      config.stateManagement,
+      config.apiLayer,
+      config.auth,
+      config.database,
+      config.orm,
+      config.testing,
+      config.extras.docker,
+      config.extras.githubActions,
+      config.extras.openApiClient,
+      config.extras.eslintPrettier,
+      config.extras.huskyLintStaged,
+    ],
   );
 
-  useEffect(() => {
-    let cancelled = false;
-    const cfg = config;
-    queueMicrotask(() => {
-      setError(null);
-      setIsLoading(true);
-    });
+  const cancelledRef = useRef(false);
+
+  const fetchVersions = useCallback(() => {
+    cancelledRef.current = false;
+    const cfg = configRef.current;
+    setError(null);
+    setIsLoading(true);
 
     fetch("/api/versions", {
       method: "POST",
@@ -54,25 +75,32 @@ export function useResolvedVersions(config: GeneratorConfig): UseResolvedVersion
         return res.json();
       })
       .then((data: { versions: Record<string, string> }) => {
-        if (!cancelled) {
+        if (!cancelledRef.current) {
           setVersions(data.versions);
           setError(null);
         }
       })
       .catch((err) => {
-        if (!cancelled) {
+        if (!cancelledRef.current) {
           setVersions(null);
           setError(err instanceof Error ? err.message : "Failed to load versions");
         }
       })
       .finally(() => {
-        if (!cancelled) setIsLoading(false);
+        if (!cancelledRef.current) setIsLoading(false);
       });
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchVersions();
+    }, DEBOUNCE_MS);
 
     return () => {
-      cancelled = true;
+      cancelledRef.current = true;
+      clearTimeout(timer);
     };
-  }, [configKey, config]);
+  }, [configKey, fetchVersions]);
 
   return { versions, isLoading, error };
 }

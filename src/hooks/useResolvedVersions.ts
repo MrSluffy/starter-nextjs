@@ -22,7 +22,9 @@ export function useResolvedVersions(config: GeneratorConfig): UseResolvedVersion
   const [error, setError] = useState<string | null>(null);
 
   const configRef = useRef(config);
-  configRef.current = config;
+  useEffect(() => {
+    configRef.current = config;
+  });
 
   const configKey = useMemo(
     () =>
@@ -36,7 +38,13 @@ export function useResolvedVersions(config: GeneratorConfig): UseResolvedVersion
         database: config.database,
         orm: config.orm,
         testing: config.testing,
-        extras: config.extras,
+        extras: {
+          docker: config.extras.docker,
+          githubActions: config.extras.githubActions,
+          openApiClient: config.extras.openApiClient,
+          eslintPrettier: config.extras.eslintPrettier,
+          huskyLintStaged: config.extras.huskyLintStaged,
+        },
       }),
     [
       config.nextVersion,

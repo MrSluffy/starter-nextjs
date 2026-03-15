@@ -14,9 +14,16 @@ export interface NpmPackageInfo {
   versions?: Record<string, unknown>;
 }
 
+/** Registry URL path: for scoped packages (@scope/name), encode / as %2F and leave @ as-is. */
+function packageRegistryPath(packageName: string): string {
+  return packageName.startsWith("@")
+    ? `@${packageName.slice(1).replace(/\//g, "%2F")}`
+    : packageName;
+}
+
 export async function fetchPackageInfo(packageName: string): Promise<NpmPackageInfo> {
-  const encoded = encodeURIComponent(packageName);
-  const url = `${REGISTRY}/${encoded}`;
+  const path = packageRegistryPath(packageName);
+  const url = `${REGISTRY}/${path}`;
   const res = await fetch(url, {
     headers: { Accept: "application/json" },
   });
@@ -69,15 +76,25 @@ export async function getLatestVersion(packageName: string, range?: string): Pro
 /**
  * Resolve multiple package versions in parallel. Returns a map of package name -> latest version.
  * Ranges can be "latest" or any valid semver range (e.g. "^15", "^19.0.0").
+ * If one package fails (e.g. network, 404), others still get resolved so we don't lose all "latest" data.
  */
 export async function getLatestVersions(
   spec: Record<string, string>,
 ): Promise<Record<string, string>> {
-  const entries = await Promise.all(
+  const results = await Promise.allSettled(
     Object.entries(spec).map(async ([name, range]) => {
       const version = await getLatestVersion(name, range);
       return [name, version] as const;
     }),
   );
+  const entries: [string, string][] = [];
+  for (const result of results) {
+    if (result.status === "fulfilled") {
+      const [name, version] = result.value;
+      entries.push([name, version]);
+    } else {
+      console.warn("[npmApi] Failed to resolve version:", result.reason?.message ?? result.reason);
+    }
+  }
   return Object.fromEntries(entries);
 }

@@ -14,6 +14,9 @@ concurrency:
   group: branch-pipeline-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   verify:
     name: Verify ${{ github.ref_name == 'main' && 'production' || 'development' }}
@@ -51,6 +54,18 @@ jobs:
 
       - name: Build application
         run: npm run build
+
+      - name: Add job summary
+        if: always()
+        run: |
+          echo "## Verify summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Vitest Test Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Unit and component tests:** see step \"Run unit and component tests\" above" >> $GITHUB_STEP_SUMMARY
+          echo "- **Generated project validation:** see step \"Validate generated projects\" above" >> $GITHUB_STEP_SUMMARY
+          echo "- **Smoke checks:** see step \"Run generated project smoke checks\" above" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build:** completed" >> $GITHUB_STEP_SUMMARY
 
   e2e:
     name: Browser Tests ${{ github.ref_name == 'main' && 'production' || 'development' }}

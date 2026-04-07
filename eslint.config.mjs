@@ -7,6 +7,15 @@ const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
   eslintConfigPrettier,
+  {
+    settings: {
+      // Explicitly set the React version to avoid eslint-plugin-react calling
+      // the removed context.getFilename() API when auto-detecting React version.
+      react: {
+        version: "19",
+      },
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

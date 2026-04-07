@@ -1,7 +1,16 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { createConfig, representativeConfigs } from "../../../tests/helpers/configs";
 import { unzipTextEntries } from "../../../tests/helpers/zip";
 import { buildZip, collectFiles } from "./index";
+
+// Avoid live npm registry calls in unit tests
+vi.mock("./packageJson", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("./packageJson")>();
+  return {
+    ...actual,
+    resolveDependencyVersions: vi.fn().mockResolvedValue({}),
+  };
+});
 
 describe("generator index", () => {
   it("collects core files and optional integrations for a rich config", () => {

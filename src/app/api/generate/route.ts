@@ -19,8 +19,9 @@ export async function POST(req: NextRequest) {
 
     const zipBuffer = await buildZip(cfg);
 
-    // Fire-and-forget: record generation without blocking the response
-    recordGeneration(cfg.projectName).catch(() => {});
+    // Record generation before returning response to ensure count is updated
+    // when the client refetches
+    await recordGeneration(cfg.projectName).catch(() => {});
 
     return new NextResponse(zipBuffer as unknown as BodyInit, {
       status: 200,

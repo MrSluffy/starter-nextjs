@@ -39,6 +39,11 @@ beforeAll(() => {
     configurable: true,
   });
 
+  // Mock getAnimations for @base-ui/react ScrollArea (not available in jsdom)
+  if (!Element.prototype.getAnimations) {
+    Element.prototype.getAnimations = () => [];
+  }
+
   if (!navigator.clipboard) {
     Object.defineProperty(navigator, "clipboard", {
       value: {

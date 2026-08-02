@@ -1,4 +1,4 @@
-import archiver from "archiver";
+import { ZipArchive } from "archiver";
 import { Writable, PassThrough } from "stream";
 import type { GeneratorConfig } from "@/store/generatorStore";
 import { buildPackageJson, resolveDependencyVersions } from "./packageJson";
@@ -169,7 +169,7 @@ export async function buildZip(cfg: GeneratorConfig): Promise<Buffer> {
     passThrough.on("end", () => resolve(Buffer.concat(chunks)));
     passThrough.on("error", reject);
 
-    const archive = archiver("zip", { zlib: { level: 9 } });
+    const archive = new ZipArchive({ zlib: { level: 9 } });
     archive.on("error", reject);
     archive.pipe(passThrough as unknown as Writable);
 

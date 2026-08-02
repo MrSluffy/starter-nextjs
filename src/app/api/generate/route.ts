@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { GeneratorConfig } from "@/store/generatorStore";
 import { buildZip } from "@/lib/generator";
+import { recordGeneration } from "@/lib/generationStore";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -17,6 +18,9 @@ export async function POST(req: NextRequest) {
     }
 
     const zipBuffer = await buildZip(cfg);
+
+    // Fire-and-forget: record generation without blocking the response
+    recordGeneration(cfg.projectName).catch(() => {});
 
     return new NextResponse(zipBuffer as unknown as BodyInit, {
       status: 200,

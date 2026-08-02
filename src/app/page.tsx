@@ -1,6 +1,9 @@
 "use client";
 
+import { useEffect } from "react";
 import { useGeneratorStore } from "@/store/generatorStore";
+import { useGenerationCount } from "@/hooks/useGenerationCount";
+import { GenerationCounter } from "@/components/GenerationCounter";
 import { WizardSidebar } from "@/components/wizard/WizardSidebar";
 import { StepTemplate } from "@/components/wizard/steps/StepTemplate";
 import { StepGeneral } from "@/components/wizard/steps/StepGeneral";
@@ -31,7 +34,18 @@ const STEPS = [
 
 export default function Home() {
   const { step } = useGeneratorStore();
+  const { count, refetch } = useGenerationCount();
   const StepComponent = STEPS[step];
+
+  useEffect(() => {
+    const handleGenerationSuccess = () => {
+      refetch();
+    };
+    window.addEventListener("generation-success", handleGenerationSuccess);
+    return () => {
+      window.removeEventListener("generation-success", handleGenerationSuccess);
+    };
+  }, [refetch]);
 
   return (
     <div className="bg-background text-foreground flex min-h-screen flex-col selection:bg-white selection:text-black">
@@ -79,6 +93,7 @@ export default function Home() {
             >
               GitHub
             </a>
+            <GenerationCounter count={count} />
           </div>
         </div>
       </header>

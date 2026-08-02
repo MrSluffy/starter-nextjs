@@ -99,6 +99,7 @@ export function StepSummary() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      window.dispatchEvent(new Event("generation-success"));
     } catch {
       setError("Network error. Please try again.");
     } finally {

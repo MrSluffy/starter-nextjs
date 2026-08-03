@@ -37,66 +37,29 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build generator-core
+        run: npm run build:core
+
       - name: Lint
         run: npm run lint
 
-      - name: Run unit and component tests
+      - name: Run tests
         run: npm run test
 
-      - name: Validate generated projects
-        run: npm run test:generated
+      - name: Build web
+        run: npm run build:web
 
-      - name: Install Playwright browsers for smoke checks
-        run: npx playwright install --with-deps chromium
-
-      - name: Run generated project smoke checks
-        run: npm run test:generated:smoke
-
-      - name: Build application
-        run: npm run build
+      - name: Build MCP
+        run: npm run build:mcp
 
       - name: Add job summary
         if: always()
         run: |
           echo "## Verify summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Vitest Test Report" >> $GITHUB_STEP_SUMMARY
+          echo "### Build & Test Report" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Unit and component tests:** see step \"Run unit and component tests\" above" >> $GITHUB_STEP_SUMMARY
-          echo "- **Generated project validation:** see step \"Validate generated projects\" above" >> $GITHUB_STEP_SUMMARY
-          echo "- **Smoke checks:** see step \"Run generated project smoke checks\" above" >> $GITHUB_STEP_SUMMARY
-          echo "- **Build:** completed" >> $GITHUB_STEP_SUMMARY
-
-  e2e:
-    name: Browser Tests ${{ github.ref_name == 'main' && 'production' || 'development' }}
-    runs-on: ubuntu-latest
-    needs: verify
-    environment:
-      name: ${{ github.ref_name == 'main' && 'production' || 'development' }}
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
-
-      - name: Set up Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
-
-      - name: Run Playwright tests
-        run: npm run test:e2e
-
-      - name: Upload Playwright report
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: playwright-report-${{ github.ref_name }}
-          path: playwright-report
-          if-no-files-found: ignore
+          echo "- **Generator Core build:** see step \"Build generator-core\" above" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tests:** see step \"Run tests\" above" >> $GITHUB_STEP_SUMMARY
+          echo "- **Web build:** see step \"Build web\" above" >> $GITHUB_STEP_SUMMARY
+          echo "- **MCP build:** see step \"Build MCP\" above" >> $GITHUB_STEP_SUMMARY

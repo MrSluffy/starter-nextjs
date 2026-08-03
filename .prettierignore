@@ -10,3 +10,7 @@ pnpm-lock.yaml
 yarn.lock
 package-lock.json
 LICENSE
+
+# Monorepo workspace dist outputs
+apps/*/dist
+packages/*/dist

@@ -1,5 +1,4 @@
 import { describe, it, expect } from "vitest";
-import { z } from "zod";
 import { GeneratorConfigInputSchema } from "@mrsluffy/generator-core";
 
 describe("Zod 4 error code exploration", () => {

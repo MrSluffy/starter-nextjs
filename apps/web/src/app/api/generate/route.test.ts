@@ -33,7 +33,7 @@ vi.mock("@mrsluffy/generator-core", async (importOriginal) => {
     const files = mod.collectFiles(cfg, resolvedVersions);
 
     const { ZipArchive } = await import("archiver");
-    const { PassThrough, Writable } = await import("stream");
+    const { PassThrough } = await import("stream");
 
     return new Promise<Buffer>((resolve, reject) => {
       const chunks: Buffer[] = [];

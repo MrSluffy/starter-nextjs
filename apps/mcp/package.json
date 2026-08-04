@@ -50,7 +50,7 @@
   },
   "devDependencies": {
     "@mrsluffy/generator-core": "*",
-    "eslint": "^9.39.5",
+    "eslint": "^10.8.0",
     "eslint-config-prettier": "^10.1.8",
     "rimraf": "^6.1.3",
     "tsup": "^8.5.1",

@@ -32,7 +32,7 @@
     "@types/archiver": "^8.0.0",
     "@types/ejs": "^3.1.5",
     "@types/semver": "^7.7.1",
-    "eslint": "^9.39.5",
+    "eslint": "^10.8.0",
     "eslint-config-prettier": "^10.1.8",
     "fflate": "^0.8.3",
     "tsup": "^8.5.1",

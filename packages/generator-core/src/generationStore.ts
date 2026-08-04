@@ -33,7 +33,6 @@ export async function readStore(): Promise<GenerationStoreData> {
         Authorization: `Bearer ${config.token}`,
         Accept: "application/vnd.github+json",
       },
-      // @ts-expect-error - 'cache' is a valid fetch option in Node 18+ but not in the base TS lib types
       cache: "no-store",
     });
 

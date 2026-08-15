@@ -1,0 +1,70 @@
+{
+  "name": "@mrsluffy/starter-nextjs-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for generating Next.js starter projects with customizable configurations",
+  "private": false,
+  "type": "module",
+  "bin": {
+    "starter-nextjs-mcp": "dist/server.js"
+  },
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "mcp",
+    "mcp-server",
+    "nextjs",
+    "starter",
+    "generator",
+    "scaffold"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MrSluffy/starter-nextjs",
+    "directory": "apps/mcp"
+  },
+  "homepage": "https://github.com/MrSluffy/starter-nextjs/tree/main/apps/mcp#readme",
+  "bugs": {
+    "url": "https://github.com/MrSluffy/starter-nextjs/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "author": "MrSluffy",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsup",
+    "prebuild": "rimraf dist",
+    "lint": "eslint src/",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:dist": "npm run build && node dist/server.js --health-check",
+    "mcp": "tsx src/server.ts",
+    "prepublishOnly": "npm run test:dist"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "archiver": "^8.0.0",
+    "ejs": "^6.0.1",
+    "semver": "^7.8.5",
+    "zod": "^4.4.3",
+    "zod-to-json-schema": "^3.25.2"
+  },
+  "devDependencies": {
+    "@mrsluffy/generator-core": "*",
+    "eslint": "^10.8.0",
+    "eslint-config-prettier": "^10.1.8",
+    "rimraf": "^6.1.3",
+    "tsup": "^8.5.1",
+    "tsx": "^4.23.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.65.0",
+    "vitest": "^4.1.10"
+  }
+}

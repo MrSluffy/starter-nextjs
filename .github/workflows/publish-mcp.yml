@@ -1,0 +1,53 @@
+name: Publish MCP
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-mcp
+  cancel-in-progress: false
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  publish:
+    name: Publish @mrsluffy/starter-nextjs-mcp
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22
+          cache: npm
+          registry-url: https://registry.npmjs.org
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build generator-core
+        run: npm run build:core
+
+      - name: Test MCP
+        run: npm run test:mcp
+
+      - name: Build MCP
+        run: npm run build:mcp
+
+      - name: Verify dist entrypoint
+        run: npm run test:dist --workspace=apps/mcp
+
+      - name: Publish to npm
+        run: npm publish --workspace=@mrsluffy/starter-nextjs-mcp --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

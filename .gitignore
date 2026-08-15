@@ -4,7 +4,7 @@
 .idea
 
 # dependencies
-/node_modules
+node_modules/
 /.pnp
 .pnp.*
 .yarn/*
@@ -24,6 +24,10 @@
 
 # production
 /build
+/dist
+apps/*/dist
+packages/*/dist
+apps/web/.next
 
 # misc
 .DS_Store
@@ -44,3 +48,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# ai knowledge
+.kiro

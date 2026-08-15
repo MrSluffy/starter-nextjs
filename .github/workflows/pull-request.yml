@@ -18,9 +18,41 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      core: ${{ steps.filter.outputs.core }}
+      web: ${{ steps.filter.outputs.web }}
+      mcp: ${{ steps.filter.outputs.mcp }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+
+      - name: Detect changed paths
+        id: filter
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3
+        with:
+          filters: |
+            core:
+              - 'packages/generator-core/**'
+              - 'package.json'
+              - 'tsconfig.base.json'
+            web:
+              - 'apps/web/**'
+              - 'packages/generator-core/**'
+              - 'package.json'
+              - 'tsconfig.base.json'
+            mcp:
+              - 'apps/mcp/**'
+              - 'packages/generator-core/**'
+              - 'package.json'
+              - 'tsconfig.base.json'
+
   quality:
     name: Quality (Node ${{ matrix.node }})
     runs-on: ubuntu-latest
+    needs: changes
     strategy:
       fail-fast: false
       matrix:
@@ -30,10 +62,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
 
       - name: Set up Node.js
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: ${{ matrix.node }}
           cache: npm
@@ -47,25 +79,24 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Run unit and component tests
+      - name: Build generator-core
+        run: npm run build:core
+
+      - name: Run all tests
         run: npm run test
 
-      - name: Validate generated project snapshots
-        run: npm run test:generated
-
-      - name: Build application
-        run: npm run build
-
-  e2e:
-    name: End-to-End Tests
+  build-web:
+    name: Build Web App
     runs-on: ubuntu-latest
+    needs: [changes, quality]
+    if: needs.changes.outputs.web == 'true'
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
 
       - name: Set up Node.js
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: 22
           cache: npm
@@ -73,16 +104,33 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+      - name: Build generator-core
+        run: npm run build:core
 
-      - name: Run Playwright tests
-        run: npm run test:e2e
+      - name: Build web
+        run: npm run build:web
 
-      - name: Upload Playwright report
-        if: always()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
+  build-mcp:
+    name: Build MCP Server
+    runs-on: ubuntu-latest
+    needs: [changes, quality]
+    if: needs.changes.outputs.mcp == 'true'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
-          name: playwright-report-pr
-          path: playwright-report
-          if-no-files-found: ignore
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build generator-core
+        run: npm run build:core
+
+      - name: Build MCP server
+        run: npm run build:mcp

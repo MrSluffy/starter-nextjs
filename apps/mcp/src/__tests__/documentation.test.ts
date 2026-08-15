@@ -3,13 +3,13 @@ import { readFileSync } from "fs";
 import { resolve } from "path";
 
 const projectRoot = resolve(__dirname, "../../../..");
-const mcpReadme = readFileSync(resolve(projectRoot, "MCP-README.md"), "utf-8");
+const mcpReadme = readFileSync(resolve(__dirname, "../../README.md"), "utf-8");
 const registryReadme = readFileSync(
   resolve(projectRoot, "registry-submission/servers/starter-nextjs/README.md"),
   "utf-8",
 );
 
-describe("MCP-README.md", () => {
+describe("apps/mcp/README.md", () => {
   it("should contain title and transport badge", () => {
     expect(mcpReadme).toContain("starter-nextjs-mcp");
     expect(mcpReadme).toContain("stdio");

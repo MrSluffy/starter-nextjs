@@ -109,13 +109,3 @@ Build and verify the compiled entry point starts correctly:
 npm run build:mcp
 npm run test:dist --workspace=apps/mcp
 ```
-
-### Publish to npm
-
-Requires an npm account that owns the `@mrsluffy` scope and a logged-in CLI (`npm login`):
-
-```bash
-npm run publish:mcp
-```
-
-Or create a GitHub Release / run the **Publish MCP** workflow (needs repo secret `NPM_TOKEN`).

@@ -3,8 +3,10 @@ name: Publish MCP
 on:
   release:
     types: [published]
+  # Manual runs build + pack only (no npm publish, no release upload)
   workflow_dispatch:
 
+# Least privilege by default; jobs override when needed
 permissions:
   contents: read
 
@@ -14,12 +16,19 @@ concurrency:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  PACKAGE_NAME: "@mrsluffy/starter-nextjs-mcp"
 
 jobs:
-  publish:
-    name: Publish @mrsluffy/starter-nextjs-mcp
+  build:
+    name: Build & pack MCP
     runs-on: ubuntu-latest
-    environment: production
+    permissions:
+      contents: read
+
+    outputs:
+      tgz: ${{ steps.pack.outputs.tgz }}
+      zip: ${{ steps.pack.outputs.zip }}
+      version: ${{ steps.pack.outputs.version }}
 
     steps:
       - name: Checkout repository
@@ -30,7 +39,6 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          registry-url: https://registry.npmjs.org
 
       - name: Install dependencies
         run: npm ci
@@ -47,7 +55,100 @@ jobs:
       - name: Verify dist entrypoint
         run: npm run test:dist --workspace=apps/mcp
 
-      - name: Publish to npm
-        run: npm publish --workspace=@mrsluffy/starter-nextjs-mcp --access public
+      - name: Verify release tag matches package version
+        if: github.event_name == 'release'
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          EXPECTED="${TAG#v}"
+          ACTUAL="$(node -p "require('./apps/mcp/package.json').version")"
+          if [ "$ACTUAL" != "$EXPECTED" ]; then
+            echo "::error::Release tag '$TAG' does not match apps/mcp version '$ACTUAL' (expected '$EXPECTED')."
+            exit 1
+          fi
+          echo "Tag $TAG matches package version $ACTUAL"
+
+      - name: Pack release artifacts
+        id: pack
+        run: |
+          set -euo pipefail
+          VERSION="$(node -p "require('./apps/mcp/package.json').version")"
+          npm pack --workspace="${PACKAGE_NAME}" --pack-destination .
+          TGZ="mrsluffy-starter-nextjs-mcp-${VERSION}.tgz"
+          ZIP="mrsluffy-starter-nextjs-mcp-${VERSION}.zip"
+          if [ ! -f "$TGZ" ]; then
+            echo "::error::Expected pack output '$TGZ' was not created."
+            ls -la mrsluffy-starter-nextjs-mcp-*.tgz || true
+            exit 1
+          fi
+          mkdir -p .release-pack
+          tar -xzf "$TGZ" -C .release-pack
+          (cd .release-pack/package && zip -r "../../$ZIP" .)
+          echo "tgz=$TGZ" >> "$GITHUB_OUTPUT"
+          echo "zip=$ZIP" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          ls -la "$TGZ" "$ZIP"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: starter-nextjs-mcp-release
+          path: |
+            mrsluffy-starter-nextjs-mcp-*.tgz
+            mrsluffy-starter-nextjs-mcp-*.zip
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    name: Publish to npm & GitHub Release
+    needs: build
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: write
+      # Enables npm Trusted Publishing / provenance (prefer over long-lived NPM_TOKEN)
+      id-token: write
+
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: starter-nextjs-mcp-release
+          path: release-assets
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: Publish tarball to npm
+        working-directory: release-assets
         env:
+          # Optional fallback if Trusted Publishing is not configured yet.
+          # Prefer a Trusted Publisher on npm, then remove this secret.
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          TGZ="${{ needs.build.outputs.tgz }}"
+          if [ ! -f "$TGZ" ]; then
+            echo "::error::Missing tarball $TGZ"
+            ls -la
+            exit 1
+          fi
+          # Empty secret must be unset so npm OIDC Trusted Publishing can work
+          if [ -z "${NODE_AUTH_TOKEN:-}" ]; then
+            unset NODE_AUTH_TOKEN
+          fi
+          npm publish "$TGZ" --access public --provenance
+
+      - name: Upload assets to GitHub Release
+        working-directory: release-assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TGZ="${{ needs.build.outputs.tgz }}"
+          ZIP="${{ needs.build.outputs.zip }}"
+          # No --clobber: refuse to overwrite existing release assets
+          gh release upload "${{ github.event.release.tag_name }}" "$TGZ" "$ZIP"

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { readFileSync } from "fs";
+import { existsSync, readFileSync } from "fs";
 import { resolve } from "path";
 
 const packageJson = JSON.parse(readFileSync(resolve(process.cwd(), "package.json"), "utf-8"));
@@ -40,5 +40,17 @@ describe("Package Manifest", () => {
     expect(packageJson.dependencies["@modelcontextprotocol/sdk"]).toBeDefined();
     expect(packageJson.dependencies["zod"]).toBeDefined();
     expect(packageJson.dependencies["zod-to-json-schema"]).toBeDefined();
+  });
+
+  it("should have public npm publishConfig", () => {
+    expect(packageJson.publishConfig).toEqual({
+      access: "public",
+      registry: "https://registry.npmjs.org/",
+    });
+  });
+
+  it("should ship README.md and LICENSE next to the package", () => {
+    expect(existsSync(resolve(process.cwd(), "README.md"))).toBe(true);
+    expect(existsSync(resolve(process.cwd(), "LICENSE"))).toBe(true);
   });
 });

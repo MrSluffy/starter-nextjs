@@ -14,6 +14,7 @@
     "start": "npm run start --workspace=apps/web",
     "dev": "npm run dev --workspace=apps/web",
     "dev:mcp": "npm run mcp --workspace=apps/mcp",
+    "publish:mcp": "npm run build:core && npm run test:mcp && npm run build:mcp && npm publish --workspace=@mrsluffy/starter-nextjs-mcp --access public",
     "test": "npm run test --workspaces --if-present",
     "test:web": "npm run test --workspace=apps/web",
     "test:mcp": "npm run test --workspace=apps/mcp",

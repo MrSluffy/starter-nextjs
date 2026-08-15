@@ -28,6 +28,14 @@
     "url": "https://github.com/MrSluffy/starter-nextjs",
     "directory": "apps/mcp"
   },
+  "homepage": "https://github.com/MrSluffy/starter-nextjs/tree/main/apps/mcp#readme",
+  "bugs": {
+    "url": "https://github.com/MrSluffy/starter-nextjs/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "author": "MrSluffy",
   "license": "MIT",
   "scripts": {

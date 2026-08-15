@@ -33,7 +33,6 @@ export async function readStore(): Promise<GenerationStoreData> {
         Authorization: `Bearer ${config.token}`,
         Accept: "application/vnd.github+json",
       },
-      cache: "no-store",
     });
 
     if (!res.ok) {
@@ -65,11 +64,10 @@ export async function readStore(): Promise<GenerationStoreData> {
   }
 }
 
-/** Write the store to the GitHub Gist. */
+/** Write the store to the GitHub Gist. No-ops when Gist env vars are unset. */
 async function writeStore(store: GenerationStoreData): Promise<void> {
   const config = getGistConfig();
   if (!config) {
-    console.error("Missing GITHUB_GIST_TOKEN or GITHUB_GIST_ID env vars");
     return;
   }
 
@@ -101,6 +99,11 @@ let writeLock: Promise<void> = Promise.resolve();
 export async function recordGeneration(projectName: string): Promise<void> {
   // Validate projectName: 1-128 chars, only [a-z0-9-]
   if (!projectName || projectName.length > 128 || !/^[a-z0-9-]+$/.test(projectName)) {
+    return;
+  }
+
+  // Skip quietly when optional Gist telemetry is not configured
+  if (!getGistConfig()) {
     return;
   }
 

@@ -24,7 +24,7 @@
     "format:check": "prettier --check ."
   },
   "devDependencies": {
-    "prettier": "^3.9.6",
+    "prettier": "^3.9.7",
     "prettier-plugin-tailwindcss": "^0.8.1",
     "typescript": "^5.9.3"
   },

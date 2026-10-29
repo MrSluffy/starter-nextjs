@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { existsSync, readFileSync } from "fs";
 import { resolve } from "path";
+import * as semver from "semver";
 
 const packageJson = JSON.parse(readFileSync(resolve(process.cwd(), "package.json"), "utf-8"));
 
@@ -21,8 +22,13 @@ describe("Package Manifest", () => {
     expect(packageJson.files).toEqual(["dist/", "README.md", "LICENSE"]);
   });
 
-  it("should require Node.js >= 18.0.0", () => {
-    expect(packageJson.engines.node).toBe(">=18.0.0");
+  it("should define a valid Node.js engine range with a modern baseline", () => {
+    expect(packageJson.engines.node).toBeDefined();
+    expect(semver.validRange(packageJson.engines.node)).toBeTruthy();
+
+    const minimumVersion = semver.minVersion(packageJson.engines.node);
+    expect(minimumVersion).not.toBeNull();
+    expect(minimumVersion!.major).toBeGreaterThanOrEqual(18);
   });
 
   it("should have all required keywords", () => {

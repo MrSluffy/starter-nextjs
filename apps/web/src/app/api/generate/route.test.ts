@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import type { Writable } from "stream";
 import { describe, expect, it, vi } from "vitest";
 import { createConfig } from "../../../../tests/helpers/configs";
 import { unzipTextEntries } from "../../../../tests/helpers/zip";
@@ -106,7 +107,7 @@ describe("/api/generate", () => {
       json: async () => {
         throw new Error("bad request");
       },
-    } as NextRequest);
+    } as unknown as NextRequest);
 
     expect(response.status).toBe(500);
     await expect(response.json()).resolves.toEqual({
